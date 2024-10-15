@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         if (mediaPlayer == null) {
             Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.music); // Replace with your audio file
             mediaPlayer = MediaPlayer.create(this, uri);
+            mediaPlayer.setLooping(true); // Set looping to true
         }
         mediaPlayer.start();
         isPlaying = true;
