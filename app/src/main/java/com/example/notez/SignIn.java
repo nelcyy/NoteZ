@@ -32,6 +32,10 @@ public class SignIn extends AppCompatActivity {
         signUpTextView = findViewById(R.id.sign_up_text);
         databaseHelper = new DatabaseHelper(this);
 
+        String text = "Dont't have an account? <b>Sign Up</b>";
+        signUpTextView.setText(android.text.Html.fromHtml(text)); // Apply bold style to "Sign Up"
+
+
         // Check if the user is already logged in
         SharedPreferences preferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
         if (preferences.getBoolean("isLoggedIn", false)) {

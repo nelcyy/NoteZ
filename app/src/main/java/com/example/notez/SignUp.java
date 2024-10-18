@@ -18,6 +18,7 @@ public class SignUp extends AppCompatActivity {
     private TextView signInText; // TextView to navigate to SignIn
     private DatabaseHelper databaseHelper;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,6 +31,10 @@ public class SignUp extends AppCompatActivity {
         signUpButton = findViewById(R.id.sign_up_button); // Initialize the SignUp button
         signInText = findViewById(R.id.sign_in_text); // Initialize the SignIn text view
         databaseHelper = new DatabaseHelper(this); // Initialize the DatabaseHelper
+
+        // Make the "Sign Up" text bold in the signInText TextView
+        String text = "Already have an account? <b>Sign Up</b>";
+        signInText.setText(android.text.Html.fromHtml(text)); // Apply bold style to "Sign Up"
 
         // Handle the SignIn text click
         signInText.setOnClickListener(new View.OnClickListener() {
