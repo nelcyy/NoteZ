@@ -2,7 +2,6 @@ package com.example.notez;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -10,7 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SignUp extends AppCompatActivity {
-    private EditText username, email, password, retypePassword;
+    private EditText email, password, retypePassword;
     private DatabaseHelper databaseHelper;
 
     @Override
@@ -19,7 +18,6 @@ public class SignUp extends AppCompatActivity {
         setContentView(R.layout.sign_up);
 
         databaseHelper = new DatabaseHelper(this);
-        username = findViewById(R.id.username);
         email = findViewById(R.id.email);
         password = findViewById(R.id.password);
         retypePassword = findViewById(R.id.retype_password);
@@ -40,20 +38,13 @@ public class SignUp extends AppCompatActivity {
     }
 
     private void registerUser() {
-        String user = username.getText().toString().trim();
         String mail = email.getText().toString().trim();
         String pass = password.getText().toString().trim();
         String retypePass = retypePassword.getText().toString().trim();
 
         // Check if any fields are empty
-        if (user.isEmpty() || mail.isEmpty() || pass.isEmpty() || retypePass.isEmpty()) {
+        if (mail.isEmpty() || pass.isEmpty() || retypePass.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Validate username length
-        if (user.length() < 3) {
-            Toast.makeText(this, "Username must be at least 3 characters", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -75,14 +66,8 @@ public class SignUp extends AppCompatActivity {
             return;
         }
 
-        // Check if username already exists
-        if (databaseHelper.isUsernameExists(user)) {
-            Toast.makeText(this, "Username already exists", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         // Add user to database
-        boolean isAdded = databaseHelper.addUser(user, mail, pass);
+        boolean isAdded = databaseHelper.addUser(mail, pass);
         if (isAdded) {
             Toast.makeText(this, "User registered successfully", Toast.LENGTH_SHORT).show();
             // Optionally navigate to sign-in screen

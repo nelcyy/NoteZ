@@ -19,11 +19,11 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/username"
+        android:id="@+id/email"
         android:layout_width="328dp"
         android:layout_height="53dp"
         android:layout_marginTop="316dp"
-        android:hint="Username"
+        android:hint="Email"
         android:padding="12dp"
         android:textColor="@android:color/black"
         app:layout_constraintEnd_toEndOf="parent"

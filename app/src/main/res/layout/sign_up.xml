@@ -18,11 +18,12 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/username"
+        android:id="@+id/password"
         android:layout_width="328dp"
         android:layout_height="53dp"
-        android:layout_marginTop="320dp"
-        android:hint="Username"
+        android:layout_marginTop="416dp"
+        android:hint="Password"
+        android:inputType="textPassword"
         android:padding="12dp"
         android:textColor="@android:color/black"
         app:layout_constraintEnd_toEndOf="parent"
@@ -33,22 +34,9 @@
         android:id="@+id/email"
         android:layout_width="328dp"
         android:layout_height="53dp"
-        android:layout_marginTop="384dp"
+        android:layout_marginTop="352dp"
         android:hint="Email"
         android:inputType="textEmailAddress"
-        android:padding="12dp"
-        android:textColor="@android:color/black"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
-        android:id="@+id/password"
-        android:layout_width="328dp"
-        android:layout_height="53dp"
-        android:layout_marginTop="448dp"
-        android:hint="Password"
-        android:inputType="textPassword"
         android:padding="12dp"
         android:textColor="@android:color/black"
         app:layout_constraintEnd_toEndOf="parent"
@@ -59,7 +47,7 @@
         android:id="@+id/retype_password"
         android:layout_width="328dp"
         android:layout_height="53dp"
-        android:layout_marginTop="512dp"
+        android:layout_marginTop="480dp"
         android:hint="Retype Password"
         android:inputType="textPassword"
         android:padding="12dp"

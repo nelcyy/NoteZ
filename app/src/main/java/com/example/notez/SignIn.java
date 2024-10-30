@@ -23,7 +23,7 @@ public class SignIn extends AppCompatActivity {
         setContentView(R.layout.sign_in);
 
         databaseHelper = new DatabaseHelper(this);
-        usernameEditText = findViewById(R.id.username);
+        usernameEditText = findViewById(R.id.email);
         passwordEditText = findViewById(R.id.password);
         Button signInButton = findViewById(R.id.sign_in_button);
         TextView signUpText = findViewById(R.id.sign_up_text);
