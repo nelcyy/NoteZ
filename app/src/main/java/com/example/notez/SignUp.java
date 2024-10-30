@@ -4,27 +4,34 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.auth.FirebaseAuth;
 
 public class SignUp extends AppCompatActivity {
     private EditText email, password, retypePassword;
-    private DatabaseHelper databaseHelper;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sign_up);
 
-        databaseHelper = new DatabaseHelper(this);
         email = findViewById(R.id.email);
         password = findViewById(R.id.password);
         retypePassword = findViewById(R.id.retype_password);
         Button signUpButton = findViewById(R.id.sign_up_button);
         TextView signInText = findViewById(R.id.sign_in_text);
+        TextView googleText = findViewById(R.id.googletext);
+        ImageView googleIcon = findViewById(R.id.googleicon);
 
-        String text = "Already have an account? <b>Sign In</b>";
+        auth = FirebaseAuth.getInstance();
+
+        String text = "Already have an account? <b>LogIn</b>";
         signInText.setText(android.text.Html.fromHtml(text));
 
         signInText.setOnClickListener(v -> goToSignIn());
@@ -33,8 +40,8 @@ public class SignUp extends AppCompatActivity {
     }
 
     private void goToSignIn() {
-        Intent intent = new Intent(this, SignIn.class); // Create intent to navigate to SignIn
-        startActivity(intent); // Start the SignIn activity
+        Intent intent = new Intent(this, SignIn.class);
+        startActivity(intent);
     }
 
     private void registerUser() {
@@ -48,7 +55,7 @@ public class SignUp extends AppCompatActivity {
             return;
         }
 
-        // Validate email format with a regex pattern directly in the if statement
+        // Validate email format
         if (!mail.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
             Toast.makeText(this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
             return;
@@ -66,16 +73,15 @@ public class SignUp extends AppCompatActivity {
             return;
         }
 
-        // Add user to database
-        boolean isAdded = databaseHelper.addUser(mail, pass);
-        if (isAdded) {
-            Toast.makeText(this, "User registered successfully", Toast.LENGTH_SHORT).show();
-            // Optionally navigate to sign-in screen
-            Intent intent = new Intent(this, SignIn.class);
-            startActivity(intent);
-            finish(); // Finish the SignUp activity
-        } else {
-            Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
-        }
+        // Register user with Firebase
+        auth.createUserWithEmailAndPassword(mail, pass).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(SignUp.this, "Registration successful!", Toast.LENGTH_SHORT).show();
+                goToSignIn();
+            } else {
+                String errorMessage = task.getException() != null ? task.getException().getMessage() : "Registration failed";
+                Toast.makeText(SignUp.this, errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

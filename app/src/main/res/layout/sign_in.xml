@@ -46,12 +46,12 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/sign_in_button"
+        android:id="@+id/login_button"
         android:layout_width="329dp"
         android:layout_height="50dp"
         android:layout_marginTop="544dp"
         android:background="@drawable/gradient"
-        android:text="SIGN IN"
+        android:text="LOGIN"
         android:textColor="@android:color/white"
         android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -62,10 +62,34 @@
         android:id="@+id/sign_up_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="196dp"
+        android:layout_marginBottom="84dp"
         android:textColor="@android:color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.474"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/googleicon"
+        android:layout_width="41dp"
+        android:layout_height="41dp"
+        android:layout_marginBottom="212dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.637"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/search" />
+
+    <TextView
+        android:id="@+id/googletext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="220dp"
+        android:text="Log In With"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.351"
         app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
