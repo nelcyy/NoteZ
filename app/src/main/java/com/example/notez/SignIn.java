@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -15,10 +14,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SignIn extends AppCompatActivity {
-
     private EditText usernameEditText, passwordEditText;
-    private Button signInButton;
-    private TextView signUpTextView;
     private DatabaseHelper databaseHelper;
 
     @Override
@@ -26,36 +22,24 @@ public class SignIn extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sign_in);
 
+        databaseHelper = new DatabaseHelper(this);
         usernameEditText = findViewById(R.id.username);
         passwordEditText = findViewById(R.id.password);
-        signInButton = findViewById(R.id.sign_in_button);
-        signUpTextView = findViewById(R.id.sign_up_text);
-        databaseHelper = new DatabaseHelper(this);
+        Button signInButton = findViewById(R.id.sign_in_button);
+        TextView signUpText = findViewById(R.id.sign_up_text);
 
         String text = "Dont't have an account? <b>Sign Up</b>";
-        signUpTextView.setText(android.text.Html.fromHtml(text)); // Apply bold style to "Sign Up"
-
+        signUpText.setText(android.text.Html.fromHtml(text));
 
         // Check if the user is already logged in
         SharedPreferences preferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
         if (preferences.getBoolean("isLoggedIn", false)) {
-            // User is already logged in, go to MainActivity
-            navigateToMain();
+            goToMain(); // User is already logged in, go to MainActivity
         }
 
-        signInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signIn();
-            }
-        });
+        signUpText.setOnClickListener(v -> goToSignUp());
 
-        signUpTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                navigateToSignUp();
-            }
-        });
+        signInButton.setOnClickListener(v -> signIn());
     }
 
     private void signIn() {
@@ -75,7 +59,7 @@ public class SignIn extends AppCompatActivity {
             editor.apply();
 
             Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
-            navigateToMain();
+            goToMain();
         } else {
             Toast.makeText(this, "Invalid username or password", Toast.LENGTH_SHORT).show();
         }
@@ -93,13 +77,13 @@ public class SignIn extends AppCompatActivity {
         return isValidUser;
     }
 
-    private void navigateToMain() {
+    private void goToMain() {
         Intent intent = new Intent(SignIn.this, MainActivity.class);
         startActivity(intent);
         finish();
     }
 
-    private void navigateToSignUp() {
+    private void goToSignUp() {
         Intent intent = new Intent(SignIn.this, SignUp.class);
         startActivity(intent);
     }

@@ -1,355 +1,256 @@
 package com.example.notez;
 
-import static androidx.constraintlayout.motion.widget.Debug.getLocation;
-
-import android.bluetooth.BluetoothAdapter;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import android.provider.MediaStore;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.ImageSpan;
-import android.util.Log;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Toast;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import android.content.pm.PackageManager;
-
+// Android permissions and UI imports
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.ImageView;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+// Android OS imports
+import android.os.Bundle; // Required for activity lifecycle management
 
-import android.location.Address;
-import android.location.Geocoder;
+// Java imports
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
+// Camera-related imports
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.provider.MediaStore;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ImageSpan;
+import android.widget.EditText;
+import android.widget.ImageView;
+
+// Location-related imports
+import android.location.Address;
+import android.location.Geocoder;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import android.location.Location;
+
+// Bluetooth-related imports
+import android.bluetooth.BluetoothAdapter;
+
+
 public class note_display extends AppCompatActivity {
 
-    private static final int CAMERA_REQUEST_CODE = 100;
-    private ImageView cameraImageView;
-    private ImageView backImageView;
     private EditText noteEditText;
-
+    private static final int LOCATION_REQUEST_CODE = 100;
+    private static final int CAMERA_REQUEST_CODE = 101;
+    private static final int BLUETOOTH_REQUEST_CODE = 102;
     private FusedLocationProviderClient fusedLocationClient;
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 101;
-    private ImageView locationImageView;
-
     private BluetoothAdapter bluetoothAdapter;
-    private ImageView bluetoothImageView; // Add a Bluetooth ImageView
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.note_display); // Use your actual layout file
+        setContentView(R.layout.note_display);
 
-        // Initialize camera icon, back arrow icon, and note field
-        cameraImageView = findViewById(R.id.imageView5); // Your camera icon ID
-        backImageView = findViewById(R.id.imageView); // Your back arrow icon ID
-        noteEditText = findViewById(R.id.textView5); // Your note field ID
+        noteEditText = findViewById(R.id.notes); // Your note field ID
+        ImageView cameraImageView = findViewById(R.id.camera); // Your camera icon ID
+        ImageView backImageView = findViewById(R.id.back); // Your back arrow icon ID
+        ImageView locationImageView = findViewById(R.id.location);  // Your location icon ID
+        ImageView bluetoothImageView = findViewById(R.id.bluetooth); // Your Bluetooth icon ID
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this); // Initialize fusedLocationClient for location services
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        // Set up the camera click listener
-        cameraImageView.setOnClickListener(v -> checkCameraPermission());
-
-        // Set up the back arrow click listener
         backImageView.setOnClickListener(v -> goBackToMainPage());
 
-        // Initialize fusedLocationClient
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        cameraImageView.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST_CODE);
+            } else {
+                openCamera();
+            }
+        });
 
-        // Find location icon and set listener
-        locationImageView = findViewById(R.id.imageView7);  // Your location icon ID
-        noteEditText = findViewById(R.id.textView5); // The EditText to display location
+        locationImageView.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+            } else {
+                fetchLocation();
+            }
+        });
 
-        // Set click listener for the location icon
-        locationImageView.setOnClickListener(v -> getLocation());
+        bluetoothImageView.setOnClickListener(v -> {
+            // Check for location permission
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+            } else {
+                // Check for Bluetooth permissions
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH_CONNECT}, BLUETOOTH_REQUEST_CODE);
+                } else {
+                    // Toggle Bluetooth
+                    toggleBluetooth();
+                }
+            }
+        });
+    }
 
-        // Initialize Bluetooth
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        bluetoothImageView = findViewById(R.id.imageView10); // Your Bluetooth icon ID
+    private void openCamera() {
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE);
+    }
 
-        // Set up Bluetooth click listener
-        bluetoothImageView.setOnClickListener(v -> toggleBluetooth());
+    private void insertImageIntoEditText(Bitmap photo) {
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(photo, 300, 400, true); // Scale the bitmap to fit better in the EditText
+
+        ImageSpan imageSpan = new ImageSpan(this, scaledBitmap); // Scale the bitmap to fit better in the EditText
+
+        // Get the EditText text as Spannable
+        SpannableStringBuilder ssb = new SpannableStringBuilder();
+        ssb.insert(0, " "); // Insert a space for the image
+        ssb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        ssb.append("\n\n"); // Add a newline to separate the image from the text
+
+        ssb.append(noteEditText.getText()); // Append the existing text below the image
+
+        noteEditText.setText(ssb); // Set the modified text back to the EditText
+        noteEditText.setSelection(ssb.length()); // Move the cursor to the end of the text
+    }
+
+    private void fetchLocation() {
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        getAddressFromLocation(location);
+                    } else {
+                        Toast.makeText(this, "Unable to fetch location", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void getAddressFromLocation(Location location) {
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                Address address = addresses.get(0);
+                String addressText = "Location: " + address.getAddressLine(0); // Full address with label
+
+                // Create a SpannableStringBuilder to manage existing content
+                SpannableStringBuilder spannableText = new SpannableStringBuilder(noteEditText.getText());
+
+                // Remove any existing location text to avoid duplication, including any preceding or trailing newlines
+                String currentText = spannableText.toString();
+                int locationIndex = currentText.indexOf("Location: ");
+                if (locationIndex != -1) {
+                    int endOfLocation = currentText.indexOf("\n\n", locationIndex);
+
+                    // Determine the range to delete, including surrounding newlines if found
+                    if (endOfLocation == -1) {
+                        endOfLocation = currentText.length();
+                    } else {
+                        endOfLocation += 2; // Include the "\n\n" after the location text
+                    }
+
+                    // Delete the location text along with any surrounding newlines
+                    spannableText.delete(locationIndex, endOfLocation);
+                }
+
+                // Determine where to insert the updated location text
+                ImageSpan[] imageSpans = spannableText.getSpans(0, spannableText.length(), ImageSpan.class);
+                int insertPosition;
+
+                if (imageSpans.length > 0) {
+                    // If there's an image, insert location below the last image span
+                    insertPosition = spannableText.getSpanEnd(imageSpans[imageSpans.length - 1]);
+                    spannableText.insert(insertPosition, "\n\n" + addressText); // Insert with double newline after image
+                } else if (spannableText.length() == 0) {
+                    // No existing content; insert location at the start without any newline
+                    spannableText.insert(0, addressText + "\n\n");
+                } else {
+                    // If there's text but no image, insert at the beginning with a newline for spacing
+                    spannableText.insert(0, addressText + "\n\n");
+                }
+
+                // Set the updated text in the EditText
+                noteEditText.setText(spannableText);
+                noteEditText.setSelection(spannableText.length()); // Move cursor to the end
+
+            } else {
+                Toast.makeText(this, "Unable to get address", Toast.LENGTH_SHORT).show();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Geocoder service failed", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void toggleBluetooth() {
-        Log.d("BluetoothCheck", "Toggle Bluetooth called");
         if (bluetoothAdapter == null) {
-            Toast.makeText(this, "Bluetooth not supported on this device", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Check if Bluetooth permissions are granted
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
-
-            Log.d("BluetoothCheck", "Bluetooth permissions not granted");
-            ActivityCompat.requestPermissions(this, new String[]{
-                    Manifest.permission.BLUETOOTH_CONNECT,
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_ADVERTISE
-            }, 1);
+            Toast.makeText(this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (!bluetoothAdapter.isEnabled()) {
-            Log.d("BluetoothCheck", "Bluetooth is not enabled, requesting enable");
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, 1);
+            startActivityForResult(enableBtIntent, BLUETOOTH_REQUEST_CODE);
         } else {
-            Log.d("BluetoothCheck", "Bluetooth is already enabled, making discoverable");
             makeDiscoverable();
         }
     }
 
     private void makeDiscoverable() {
         Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300); // 300 seconds
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
         startActivity(discoverableIntent);
     }
 
-
-    // Method to go back to the MainActivity
     private void goBackToMainPage() {
         finish(); // This will close the note_display activity and go back to MainActivity
     }
 
-    private boolean hasCamera() {
-        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
-    }
-
-    private void openCamera() {
-        if (!hasCamera()) {
-            Toast.makeText(this, "No camera found on this device", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
-            Log.d("CameraCheck", "Starting camera intent");
-            startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE);
-        } else {
-            Log.d("CameraCheck", "No app available to handle camera intent");
-            Toast.makeText(this, "Camera not supported", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void checkCameraPermission() {
-        if (checkSelfPermission(android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            // Permission is granted, open the camera
-            openCamera();
-        } else {
-            // Permission is not granted, request for permission
-            requestPermissions(new String[]{android.Manifest.permission.CAMERA}, CAMERA_REQUEST_CODE);
-            Log.d("CameraCheck", "Camera permission not granted");
-        }
-    }
-
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == CAMERA_REQUEST_CODE) {
-            // Handle camera permission result
+        if (requestCode == LOCATION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, open the camera
-                openCamera();
-            } else {
-                // Permission denied, show a toast message
-                Toast.makeText(this, "Camera permission is required to use the camera", Toast.LENGTH_SHORT).show();
-            }
-        } else if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            // Handle location permission result
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, fetch location
                 fetchLocation();
             } else {
-                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Location permission is required to get current location", Toast.LENGTH_SHORT).show();
             }
-        } else if (requestCode == 1) { // Replace 1 with your actual request code for Bluetooth
-            // Handle Bluetooth permission result
+        } else if (requestCode == CAMERA_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, attempt to enable Bluetooth again
+                openCamera();
+            } else {
+                Toast.makeText(this, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == BLUETOOTH_REQUEST_CODE) {
+            // Check if Bluetooth permission is granted
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 toggleBluetooth();
             } else {
-                Toast.makeText(this, "Bluetooth permissions are required", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Bluetooth permission is required to use Bluetooth", Toast.LENGTH_SHORT).show();
             }
         }
-        // Additional permissions can be handled here as needed
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        // Handle camera result
         if (requestCode == CAMERA_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-
-            if (photo != null) {
-                // Create a drawable from the captured Bitmap
-                Drawable drawable = new BitmapDrawable(getResources(), photo);
-
-                // Set the bounds for the drawable (resize as necessary)
-                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-
-                // Create an ImageSpan
-                ImageSpan imageSpan = new ImageSpan(drawable, ImageSpan.ALIGN_BOTTOM);
-
-                // Get the existing text in the EditText
-                SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(noteEditText.getText());
-
-                // Insert the image at the start of the text
-                spannableStringBuilder.insert(0, " "); // This space will hold the image
-                spannableStringBuilder.setSpan(imageSpan, 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                // Check if there are already double newlines after the image
-                if (!spannableStringBuilder.toString().startsWith("\n\n", 1)) {
-                    spannableStringBuilder.insert(1, "\n\n"); // Add newlines only if they don't exist
-                }
-
-                // Set the updated text with the image in the EditText
-                noteEditText.setText(spannableStringBuilder);
+            Bundle extras = data.getExtras();
+            if (extras != null) {
+                Bitmap photo = (Bitmap) extras.get("data");
+                insertImageIntoEditText(photo);
             }
-        }
-        // Handle Bluetooth enable result
-        else if (requestCode == 1) { // This should match the request code used in toggleBluetooth
+        } else if (requestCode == BLUETOOTH_REQUEST_CODE) {
+            // Check if Bluetooth was enabled
             if (resultCode == RESULT_OK) {
-                // Bluetooth has been enabled, now make it discoverable
+                // Bluetooth has been enabled, now make the device discoverable
                 makeDiscoverable();
             } else {
-                Toast.makeText(this, "Bluetooth not enabled", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Bluetooth was not enabled", Toast.LENGTH_SHORT).show();
             }
-        }
-    }
-
-    private void getLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            // Request for permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST_CODE);
-        } else {
-            // Permissions already granted, fetch location
-            fetchLocation();
-        }
-    }
-
-    // Fetch location details and update the note with address information
-    private void fetchLocation() {
-        fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
-                .addOnCompleteListener(new OnCompleteListener<Location>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Location> task) {
-                        if (task.isSuccessful() && task.getResult() != null) {
-                            Location location = task.getResult();
-                            double latitude = location.getLatitude();
-                            double longitude = location.getLongitude();
-                            updateLocationInNoteField(latitude, longitude);
-                        } else {
-                            Toast.makeText(note_display.this, "Unable to fetch location", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
-
-    private void updateLocationInNoteField(double latitude, double longitude) {
-        Geocoder geocoder = new Geocoder(note_display.this, Locale.getDefault());
-        try {
-            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
-            if (addresses != null && !addresses.isEmpty()) {
-                Address address = addresses.get(0);
-                String addressLine = address.getAddressLine(0);
-                String country = address.getCountryName();
-                String city = address.getLocality();
-                String state = address.getAdminArea();
-                String road = address.getThoroughfare();
-
-                // Create the location text
-                String locationText = "Address: " + addressLine + "\n" +
-                        "Country: " + country + "\n" +
-                        "City: " + city + "\n" +
-                        "State: " + state + "\n" +
-                        "Road: " + road + "\n\n";
-
-                // Get the existing text as Spannable (preserving images)
-                SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(noteEditText.getText());
-
-                // Find and remove the old location (if it exists)
-                String oldLocationMarker = "Address:";
-                int startIndex = spannableStringBuilder.toString().indexOf(oldLocationMarker);
-                if (startIndex != -1) {
-                    int endIndex = spannableStringBuilder.toString().indexOf("\n\n", startIndex);
-                    if (endIndex != -1) {
-                        spannableStringBuilder.delete(startIndex, endIndex + 2); // +2 to remove double newlines
-                    } else {
-                        spannableStringBuilder.delete(startIndex, spannableStringBuilder.length());
-                    }
-                }
-
-                // Find the position of the ImageSpan
-                ImageSpan[] imageSpans = spannableStringBuilder.getSpans(0, spannableStringBuilder.length(), ImageSpan.class);
-
-                if (imageSpans.length > 0) {
-                    // Get the end position of the first image span
-                    int imageEndPosition = spannableStringBuilder.getSpanEnd(imageSpans[0]);
-
-                    // Check if there are already double newlines after the image
-                    String textAfterImage = spannableStringBuilder.subSequence(imageEndPosition, spannableStringBuilder.length()).toString();
-                    if (!textAfterImage.startsWith("\n\n")) {
-                        // If there aren't double newlines after the image, add them
-                        spannableStringBuilder.insert(imageEndPosition, "\n\n");
-                    }
-
-                    // Insert the new location text right after the image span
-                    spannableStringBuilder.insert(imageEndPosition + 2, locationText); // +2 to account for the newlines
-                } else {
-                    // If no image span is found, insert location at the very start of the notes
-                    spannableStringBuilder.insert(0, locationText);
-                }
-
-                // Set the updated text with the image (if any) and new location
-                noteEditText.setText(spannableStringBuilder);
-            } else {
-                // If no address is found, append coordinates
-                noteEditText.append("\nLocation: " + latitude + ", " + longitude + " (Address not found)");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            Toast.makeText(note_display.this, "Error fetching address", Toast.LENGTH_SHORT).show();
         }
     }
 }

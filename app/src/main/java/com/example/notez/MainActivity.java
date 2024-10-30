@@ -1,73 +1,37 @@
 package com.example.notez;
 
-import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+
+//For music
+import android.media.MediaPlayer;
+import android.net.Uri;
 
 public class MainActivity extends AppCompatActivity {
 
     private ImageView musicPlayerButton;
     private MediaPlayer mediaPlayer;
-    private boolean isPlaying = false;
-
-    private ImageView logoutImageView;
-    private ImageView circleImageView;
-    private ImageView plusImageView;
-
-    private static final int REQUEST_PERMISSION = 1;
+    private boolean isPlaying = false; // declare as false, to make the music pause at first
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Find the views
-        logoutImageView = findViewById(R.id.logout);
-        circleImageView = findViewById(R.id.circle);
-        plusImageView = findViewById(R.id.plus);
-
-        // Set up the click listener for logout
-        logoutImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                logout();
-            }
-        });
-
-        // Set up the click listener for the circle icon
-        circleImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openNoteDisplay();
-            }
-        });
-
-        // Set up the click listener for the plus icon
-        plusImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openNoteDisplay();
-            }
-        });
-
+        ImageView logoutImageView = findViewById(R.id.logout);
+        ImageView circleImageView = findViewById(R.id.circle);
+        ImageView plusImageView = findViewById(R.id.plus);
         musicPlayerButton = findViewById(R.id.music_player_button);
 
-        // Request permissions
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
-        }
+        logoutImageView.setOnClickListener(v -> logout());
+
+        circleImageView.setOnClickListener(v -> openNoteDisplay());
+
+        plusImageView.setOnClickListener(v -> openNoteDisplay());
 
         musicPlayerButton.setOnClickListener(v -> {
             if (isPlaying) {
@@ -79,23 +43,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void playMusic() {
-        if (mediaPlayer == null) {
-            Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.music); // Replace with your audio file
-            mediaPlayer = MediaPlayer.create(this, uri);
-            mediaPlayer.setLooping(true); // Set looping to true
+        if (mediaPlayer == null) { // mediaplayer doesnt been set up first
+            Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.music); // specify the location of media files (music/mp3)
+            mediaPlayer = MediaPlayer.create(this, uri); // now set up mediaPlayer with the music file URI
+            mediaPlayer.setLooping(true); // set into loop, so it will play the music looping/not stop by itself
         }
-        mediaPlayer.start();
-        isPlaying = true;
-        musicPlayerButton.setImageResource(R.drawable.ic_pause); // Change icon to pause
-        Toast.makeText(this, "Music Playing", Toast.LENGTH_SHORT).show();
+        mediaPlayer.start(); // start playing the music file
+        isPlaying = true; // make the boolean into true, means the music is playing
+        musicPlayerButton.setImageResource(R.drawable.ic_pause); // Change icon play to pause
+        Toast.makeText(this, "Music Playing", Toast.LENGTH_SHORT).show(); // show a message to the user saying "Music Playing"
     }
 
     private void pauseMusic() {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-            mediaPlayer.pause();
-            isPlaying = false;
+            mediaPlayer.pause(); // pause playing the music file
+            isPlaying = false; // make the boolean into false, means the music is stop now
             musicPlayerButton.setImageResource(R.drawable.ic_play); // Change icon to play
-            Toast.makeText(this, "Music Paused", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Music Paused", Toast.LENGTH_SHORT).show(); // show a message to the user saying "Music Playing"
         }
     }
 
@@ -109,8 +73,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openNoteDisplay() {
-        // Navigate to the note_display activity
-        Intent intent = new Intent(MainActivity.this, note_display.class);
+        Intent intent = new Intent(MainActivity.this, note_display.class); // Navigate to the note_display activity
         startActivity(intent);
     }
 

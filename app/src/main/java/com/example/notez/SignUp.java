@@ -2,7 +2,7 @@ package com.example.notez;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -10,47 +10,28 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SignUp extends AppCompatActivity {
-    private EditText username;
-    private EditText nickname;
-    private EditText password;
-    private EditText retypePassword;
-    private Button signUpButton;
-    private TextView signInText; // TextView to navigate to SignIn
+    private EditText username, email, password, retypePassword;
     private DatabaseHelper databaseHelper;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.sign_up); // Set the layout for SignUp activity
+        setContentView(R.layout.sign_up);
 
-        username = findViewById(R.id.username); // Initialize the username EditText
-        nickname = findViewById(R.id.nickname); // Initialize the nickname EditText
-        password = findViewById(R.id.password); // Initialize the password EditText
-        retypePassword = findViewById(R.id.retype_password); // Initialize the retype password EditText
-        signUpButton = findViewById(R.id.sign_up_button); // Initialize the SignUp button
-        signInText = findViewById(R.id.sign_in_text); // Initialize the SignIn text view
-        databaseHelper = new DatabaseHelper(this); // Initialize the DatabaseHelper
+        databaseHelper = new DatabaseHelper(this);
+        username = findViewById(R.id.username);
+        email = findViewById(R.id.email);
+        password = findViewById(R.id.password);
+        retypePassword = findViewById(R.id.retype_password);
+        Button signUpButton = findViewById(R.id.sign_up_button);
+        TextView signInText = findViewById(R.id.sign_in_text);
 
-        // Make the "Sign Up" text bold in the signInText TextView
-        String text = "Already have an account? <b>Sign Up</b>";
-        signInText.setText(android.text.Html.fromHtml(text)); // Apply bold style to "Sign Up"
+        String text = "Already have an account? <b>Sign In</b>";
+        signInText.setText(android.text.Html.fromHtml(text));
 
-        // Handle the SignIn text click
-        signInText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                goToSignIn(); // Navigate to SignIn activity
-            }
-        });
+        signInText.setOnClickListener(v -> goToSignIn());
 
-        // Handle the SignUp button click
-        signUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                registerUser(); // Register the new user
-            }
-        });
+        signUpButton.setOnClickListener(v -> registerUser());
     }
 
     private void goToSignIn() {
@@ -60,12 +41,12 @@ public class SignUp extends AppCompatActivity {
 
     private void registerUser() {
         String user = username.getText().toString().trim();
-        String nick = nickname.getText().toString().trim();
+        String mail = email.getText().toString().trim();
         String pass = password.getText().toString().trim();
         String retypePass = retypePassword.getText().toString().trim();
 
         // Check if any fields are empty
-        if (user.isEmpty() || nick.isEmpty() || pass.isEmpty() || retypePass.isEmpty()) {
+        if (user.isEmpty() || mail.isEmpty() || pass.isEmpty() || retypePass.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -73,6 +54,12 @@ public class SignUp extends AppCompatActivity {
         // Validate username length
         if (user.length() < 3) {
             Toast.makeText(this, "Username must be at least 3 characters", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Validate email format with a regex pattern directly in the if statement
+        if (!mail.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
+            Toast.makeText(this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -95,7 +82,7 @@ public class SignUp extends AppCompatActivity {
         }
 
         // Add user to database
-        boolean isAdded = databaseHelper.addUser(user, nick, pass);
+        boolean isAdded = databaseHelper.addUser(user, mail, pass);
         if (isAdded) {
             Toast.makeText(this, "User registered successfully", Toast.LENGTH_SHORT).show();
             // Optionally navigate to sign-in screen
