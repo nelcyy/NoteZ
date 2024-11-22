@@ -49,7 +49,7 @@ public class SignIn extends AppCompatActivity {
 
         // Configure Google Sign-In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id)) // Replace with actual client ID
+                .requestIdToken(getString(R.string.default_web_client_id)) // Firebase client ID
                 .requestEmail()
                 .build();
         googleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -64,9 +64,9 @@ public class SignIn extends AppCompatActivity {
         }
 
         signUpText.setOnClickListener(v -> goToSignUp());
+
         signInButton.setOnClickListener(v -> signIn());
 
-        // Set listeners for Google Sign-In
         googleText.setOnClickListener(v -> signInWithGoogle());
 
         googleIcon.setOnClickListener(v -> signInWithGoogle());
@@ -100,14 +100,16 @@ public class SignIn extends AppCompatActivity {
             if (task.isSuccessful()) {
                 FirebaseUser user = auth.getCurrentUser();
 
-                // Save login status in SharedPreferences
-                SharedPreferences preferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putBoolean("isLoggedIn", true);
-                editor.apply();
+                if (user != null) {
+                    // Save login status in SharedPreferences
+                    SharedPreferences preferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putBoolean("isLoggedIn", true);
+                    editor.apply();
 
-                Toast.makeText(SignIn.this, "Google sign-in successful!", Toast.LENGTH_SHORT).show();
-                goToMain();
+                    Toast.makeText(SignIn.this, "Google sign-in successful!", Toast.LENGTH_SHORT).show();
+                    goToMain();
+                }
             } else {
                 Toast.makeText(SignIn.this, "Google sign-in failed", Toast.LENGTH_SHORT).show();
             }

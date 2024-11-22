@@ -1,5 +1,6 @@
 package com.example.notez;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -7,15 +8,22 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
-//For music
+// For music
 import android.media.MediaPlayer;
 import android.net.Uri;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
     private ImageView musicPlayerButton;
     private MediaPlayer mediaPlayer;
     private boolean isPlaying = false; // declare as false, to make the music pause at first
+    private FirebaseAuth auth;
+    private GoogleSignInClient googleSignInClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +34,15 @@ public class MainActivity extends AppCompatActivity {
         ImageView circleImageView = findViewById(R.id.circle);
         ImageView plusImageView = findViewById(R.id.plus);
         musicPlayerButton = findViewById(R.id.music_player_button);
+
+        auth = FirebaseAuth.getInstance();
+
+        // Configure Google Sign-In
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id)) // Use the Firebase client ID
+                .requestEmail()
+                .build();
+        googleSignInClient = GoogleSignIn.getClient(this, gso);
 
         logoutImageView.setOnClickListener(v -> logout());
 
@@ -43,23 +60,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void playMusic() {
-        if (mediaPlayer == null) { // mediaplayer doesnt been set up first
-            Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.music); // specify the location of media files (music/mp3)
-            mediaPlayer = MediaPlayer.create(this, uri); // now set up mediaPlayer with the music file URI
-            mediaPlayer.setLooping(true); // set into loop, so it will play the music looping/not stop by itself
+        if (mediaPlayer == null) {
+            Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.music);
+            mediaPlayer = MediaPlayer.create(this, uri);
+            mediaPlayer.setLooping(true);
         }
-        mediaPlayer.start(); // start playing the music file
-        isPlaying = true; // make the boolean into true, means the music is playing
-        musicPlayerButton.setImageResource(R.drawable.ic_pause); // Change icon play to pause
-        Toast.makeText(this, "Music Playing", Toast.LENGTH_SHORT).show(); // show a message to the user saying "Music Playing"
+        mediaPlayer.start();
+        isPlaying = true;
+        musicPlayerButton.setImageResource(R.drawable.ic_pause);
+        Toast.makeText(this, "Music Playing", Toast.LENGTH_SHORT).show();
     }
 
     private void pauseMusic() {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-            mediaPlayer.pause(); // pause playing the music file
-            isPlaying = false; // make the boolean into false, means the music is stop now
-            musicPlayerButton.setImageResource(R.drawable.ic_play); // Change icon to play
-            Toast.makeText(this, "Music Paused", Toast.LENGTH_SHORT).show(); // show a message to the user saying "Music Playing"
+            mediaPlayer.pause();
+            isPlaying = false;
+            musicPlayerButton.setImageResource(R.drawable.ic_play);
+            Toast.makeText(this, "Music Paused", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -73,20 +90,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openNoteDisplay() {
-        Intent intent = new Intent(MainActivity.this, note_display.class); // Navigate to the note_display activity
+        Intent intent = new Intent(MainActivity.this, note_display.class);
         startActivity(intent);
     }
 
     private void logout() {
-        // Clear shared preferences (use "user_prefs" here to match SignIn.java)
-        SharedPreferences sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.clear(); // This will clear the login state
+        // Sign out of Firebase
+        auth.signOut();
+
+        // Sign out of Google
+        googleSignInClient.signOut().addOnCompleteListener(this, task -> {
+            Toast.makeText(MainActivity.this, "Signed out successfully", Toast.LENGTH_SHORT).show();
+        });
+
+        // Clear the login status in SharedPreferences
+        SharedPreferences preferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("isLoggedIn", false);
         editor.apply();
 
         // Navigate back to the login screen
         Intent intent = new Intent(MainActivity.this, SignIn.class);
         startActivity(intent);
-        finish(); // Close the current activity
+        finish();
     }
 }

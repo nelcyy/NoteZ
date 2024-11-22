@@ -2,6 +2,7 @@ package com.example.notez;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -22,11 +24,31 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+
 public class SignUp extends AppCompatActivity {
     private static final int RC_SIGN_IN = 1001;
     private EditText email, password, retypePassword;
     private FirebaseAuth auth;
     private GoogleSignInClient googleSignInClient;
+    private FirebaseFirestore firestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +64,7 @@ public class SignUp extends AppCompatActivity {
         ImageView googleIcon = findViewById(R.id.googleicon);
 
         auth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance(); // Initialize Firestore
 
         // Configure Google Sign-In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -98,11 +121,6 @@ public class SignUp extends AppCompatActivity {
         });
     }
 
-    private void goToSignIn() {
-        Intent intent = new Intent(this, SignIn.class);
-        startActivity(intent);
-    }
-
     private void registerUser() {
         String mail = email.getText().toString().trim();
         String pass = password.getText().toString().trim();
@@ -132,16 +150,75 @@ public class SignUp extends AppCompatActivity {
             return;
         }
 
-        // Register user with Firebase
+        saveUserToMySQL(mail, pass);
+
+        saveUserToFirebase(mail, pass);
+    }
+
+    private void saveUserToFirebase(String mail, String pass) {
         auth.createUserWithEmailAndPassword(mail, pass).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                Toast.makeText(SignUp.this, "Registration successful!", Toast.LENGTH_SHORT).show();
-                goToSignIn();
+                FirebaseUser user = auth.getCurrentUser();
+                if (user != null) {
+                    String userId = user.getUid();
+
+                    // Create a UsersModel instance
+                    UsersModel userModel = new UsersModel(mail, pass);
+
+                    // Firestore Collection and Document Reference
+                    CollectionReference collections = firestore.collection("users");
+                    DocumentReference doc = collections.document(userId);
+
+                    // Save the user data
+                    doc.set(userModel)
+                            .addOnSuccessListener(aVoid -> {
+                                goToSignIn();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(SignUp.this, "Failed to save user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
+                }
             } else {
                 String errorMessage = task.getException() != null ? task.getException().getMessage() : "Registration failed";
                 Toast.makeText(SignUp.this, errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void saveUserToMySQL(String email, String pass) {
+        // URL of the PHP script
+        String url = "http://192.168.56.1/notez/add.php";
+
+        // Instantiate the RequestQueue
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+
+        // Create a StringRequest with POST method
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                response -> {
+                    if ("Success".equals(response)) {
+
+                    } else {
+                        Toast.makeText(SignUp.this, "Failed to save user", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> Log.e("SignUp", "Volley Error: " + error.getLocalizedMessage())
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("email", email);
+                params.put("pass", pass);
+                return params;
+            }
+        };
+
+        // Add the request to the RequestQueue
+        queue.add(stringRequest);
+    }
+
+    private void goToSignIn() {
+        Intent intent = new Intent(this, SignIn.class);
+        startActivity(intent);
     }
 
     private void goToMain() {

@@ -50,10 +50,12 @@ dependencies {
     implementation(libs.play.services.tasks)
     implementation(libs.play.services.location)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation(libs.firebase.auth.v2130)
     implementation(libs.play.services.auth)
     implementation(platform(libs.firebase.bom))
+    implementation(libs.volley)
 }

@@ -37,7 +37,6 @@ import android.location.Location;
 // Bluetooth-related imports
 import android.bluetooth.BluetoothAdapter;
 
-
 public class note_display extends AppCompatActivity {
 
     private EditText noteEditText;
@@ -254,3 +253,172 @@ public class note_display extends AppCompatActivity {
         }
     }
 }
+
+
+
+/*
+package com.example.notez;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
+import android.os.Bundle;
+import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import java.util.Arrays;
+
+public class note_display extends AppCompatActivity {
+
+    private ImageView cameraImageView;
+    private ImageView backImageView;
+    private ImageView locationImageView;
+    private ImageView bluetoothImageView;
+    private EditText noteEditText;
+
+    private static final int CAMERA_REQUEST_CODE = 101;
+    private CameraDevice cameraDevice;
+    private CameraCaptureSession cameraCaptureSession;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.note_display); // Use your actual layout file
+
+        // Initialize views
+        cameraImageView = findViewById(R.id.camera); // Your camera icon ID
+        backImageView = findViewById(R.id.back); // Your back arrow icon ID
+        noteEditText = findViewById(R.id.notes); // Your note field ID
+        locationImageView = findViewById(R.id.location);  // Your location icon ID
+        bluetoothImageView = findViewById(R.id.bluetooth); // Your Bluetooth icon ID
+
+        // Set up click listeners
+        backImageView.setOnClickListener(v -> goBackToMainPage());
+        cameraImageView.setOnClickListener(v -> requestCameraPermission());
+
+        // Initialize SurfaceView
+        SurfaceView surfaceView = findViewById(R.id.surface_view);
+        SurfaceHolder surfaceHolder = surfaceView.getHolder();
+        surfaceHolder.addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                // Only attempt to open the camera when the surface is ready
+                if (ActivityCompat.checkSelfPermission(note_display.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    startCamera(holder);
+                }
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                // Restart the camera preview if needed on surface changes
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                closeCamera();
+            }
+        });
+    }
+
+    private void requestCameraPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST_CODE);
+        }
+    }
+
+    private void goBackToMainPage() {
+        finish(); // This will close the note_display activity and go back to MainActivity
+    }
+
+    private void startCamera(SurfaceHolder holder) {
+        CameraManager cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
+        try {
+            String cameraId = cameraManager.getCameraIdList()[0];
+            cameraManager.openCamera(cameraId, new CameraDevice.StateCallback() {
+                @Override
+                public void onOpened(@NonNull CameraDevice camera) {
+                    cameraDevice = camera;
+                    createCameraPreviewSession(camera, holder);
+                }
+
+                @Override
+                public void onDisconnected(@NonNull CameraDevice camera) {
+                    camera.close();
+                    cameraDevice = null;
+                }
+
+                @Override
+                public void onError(@NonNull CameraDevice camera, int error) {
+                    camera.close();
+                    cameraDevice = null;
+                }
+            }, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to access the camera.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void closeCamera() {
+        if (cameraDevice != null) {
+            cameraDevice.close();
+            cameraDevice = null;
+        }
+    }
+
+    private void createCameraPreviewSession(CameraDevice cameraDevice, SurfaceHolder holder) {
+        try {
+            // Create a CaptureRequest.Builder for the preview
+            CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            Surface surface = holder.getSurface();
+            captureRequestBuilder.addTarget(surface);
+
+            // Create a CameraCaptureSession
+            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession session) {
+                    try {
+                        // Start displaying the camera preview
+                        session.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+                    Toast.makeText(note_display.this, "Camera configuration failed.", Toast.LENGTH_SHORT).show();
+                }
+            }, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == CAMERA_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                SurfaceView surfaceView = findViewById(R.id.surface_view);
+                SurfaceHolder surfaceHolder = surfaceView.getHolder();
+                startCamera(surfaceHolder); // Start camera if permission is granted and surface is ready
+            } else {
+                Toast.makeText(this, "Camera permission is required to use the camera.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+}*/
+
