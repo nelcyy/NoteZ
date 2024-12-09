@@ -7,6 +7,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import android.util.Log;
 import android.widget.Toast;
 
 // Android OS imports
@@ -32,6 +34,11 @@ import android.location.Address;
 import android.location.Geocoder;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import android.location.Location;
 
 // Bluetooth-related imports
@@ -39,7 +46,7 @@ import android.bluetooth.BluetoothAdapter;
 
 public class note_display extends AppCompatActivity {
 
-    private EditText noteEditText;
+    private EditText noteEditText, titleEditText, subtitleEditText;
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final int CAMERA_REQUEST_CODE = 101;
     private static final int BLUETOOTH_REQUEST_CODE = 102;
@@ -51,11 +58,14 @@ public class note_display extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.note_display);
 
+        titleEditText = findViewById(R.id.notesTitle); // Your title field ID
+        subtitleEditText = findViewById(R.id.notesSubtitle); // Your subtitle field ID
         noteEditText = findViewById(R.id.notes); // Your note field ID
         ImageView cameraImageView = findViewById(R.id.camera); // Your camera icon ID
         ImageView backImageView = findViewById(R.id.back); // Your back arrow icon ID
         ImageView locationImageView = findViewById(R.id.location);  // Your location icon ID
         ImageView bluetoothImageView = findViewById(R.id.bluetooth); // Your Bluetooth icon ID
+        ImageView doneImageView = findViewById(R.id.done); // Your done icon ID
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this); // Initialize fusedLocationClient for location services
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -91,6 +101,8 @@ public class note_display extends AppCompatActivity {
                 }
             }
         });
+
+        doneImageView.setOnClickListener(v -> saveNote());
     }
 
     private void openCamera() {
@@ -208,6 +220,68 @@ public class note_display extends AppCompatActivity {
         finish(); // This will close the note_display activity and go back to MainActivity
     }
 
+    private void saveNote() {
+        String title = titleEditText.getText().toString().trim();
+        String subtitle = subtitleEditText.getText().toString().trim();
+        String note = noteEditText.getText().toString().trim();
+
+        // Validate input fields
+        if (title.isEmpty() || subtitle.isEmpty() || note.isEmpty()) {
+            Toast.makeText(this, "All fields must be filled", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Get the first word from the note (or a short snippet if needed)
+        String firstWord = getFirstWord(note);
+
+
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = auth.getCurrentUser();
+
+        if (currentUser == null) {
+            Toast.makeText(this, "User is not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String userId = currentUser.getUid();
+        Log.d("SaveNoteDebug", "Saving note for user: " + userId);
+
+        saveNoteToFirebase(title, subtitle, note, firstWord, userId);
+    }
+
+    private String getFirstWord(String note) {
+        // Extract the first word or a snippet of the note
+        String[] words = note.split("\\s+");
+        return words.length > 0 ? words[0] : "";
+    }
+
+    private void saveNoteToFirebase(String title, String subtitle, String note, String firstWord, String userId) {
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        CollectionReference notesCollection = firestore.collection("notes");
+
+        NoteModel noteModel = new NoteModel(title, subtitle, note, firstWord, userId);
+
+        notesCollection.add(noteModel)
+                .addOnSuccessListener(documentReference -> {
+                    // Note saved successfully, set the note's ID
+                    noteModel.setId(documentReference.getId());
+
+                    // Create an Intent to pass the note back to the previous activity
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("savedNote", (CharSequence) noteModel);  // Pass the saved note
+                    setResult(RESULT_OK, resultIntent);  // Return the result to the calling activity
+
+                    Toast.makeText(this, "Note saved successfully", Toast.LENGTH_SHORT).show();
+
+                    // Finish the activity and return to the previous page
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    String errorMessage = e.getMessage() != null ? e.getMessage() : "Failed to save note";
+                    Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+                    Log.e("FirestoreError", errorMessage, e);
+                });
+    }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
