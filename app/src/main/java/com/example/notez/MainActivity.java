@@ -33,10 +33,13 @@ public class MainActivity extends AppCompatActivity implements NotesAdapter.OnNo
     private NotesAdapter notesAdapter;
     private List<NoteModel> notesList;
     private FirebaseFirestore firestore;
+
+    private ImageView musicPlayerButton;
     private MediaPlayer mediaPlayer;
     private boolean isPlaying = false; // to track music playing state
     private FirebaseAuth auth;
     private GoogleSignInClient googleSignInClient;
+
     private EditText searchBar; // Search bar for filtering notes
 
     @Override
@@ -48,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements NotesAdapter.OnNo
         ImageView logoutImageView = findViewById(R.id.logout);
         ImageView circleImageView = findViewById(R.id.circle);
         ImageView plusImageView = findViewById(R.id.plus);
-        ImageView musicPlayerButton = findViewById(R.id.music_player_button);
+        musicPlayerButton = findViewById(R.id.music_player_button);
         searchBar = findViewById(R.id.searchBar);
         notesRecyclerView = findViewById(R.id.rvListNote);
 
@@ -94,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements NotesAdapter.OnNo
                 // No action needed
             }
         });
+
         fetchNotes(); // Load notes from Firestore
     }
 
