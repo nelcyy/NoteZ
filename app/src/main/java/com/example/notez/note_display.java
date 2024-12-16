@@ -128,12 +128,6 @@ public class note_display extends AppCompatActivity {
 
     }
 
-    private String getFirstWord(String note) {
-        // Extract the first word or a snippet of the note
-        String[] words = note.split("\\s+");
-        return words.length > 0 ? words[0] : "";
-    }
-
     private void showEmailSelectionDialogAndSaveNote() {
         FirebaseFirestore firestore = FirebaseFirestore.getInstance();
         FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -368,6 +362,12 @@ public class note_display extends AppCompatActivity {
 
     private void goBackToMainPage() {
         finish(); // This will close the note_display activity and go back to MainActivity
+    }
+
+    private String getFirstWord(String note) {
+        // Extract the first word or a snippet of the note
+        String[] words = note.split("\\s+");
+        return words.length > 0 ? words[0] : "";
     }
 
     @Override
