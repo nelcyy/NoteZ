@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "223577684181",
+    "project_id": "notez-4f5a3fc7",
+    "storage_bucket": "notez-4f5a3fc7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:223577684181:android:c4f74a97300d719801ca5c",
+        "android_client_info": {
+          "package_name": "com.example.notez"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "223577684181-9qdbopljgolq76k40o3qtcnq2dvm5vni.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBFMT-Za02_iQKAOIVLcp9x7L_wBm2Mrs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "223577684181-9qdbopljgolq76k40o3qtcnq2dvm5vni.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
